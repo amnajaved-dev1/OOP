@@ -1,0 +1,1121 @@
+package com.ebs.dao;
+
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+
+public class DatabaseConnection {
+    private static final String URL = "jdbc:oracle:thin:@localhost:1521:XE"; // Replace with your Oracle connection URL
+    private static final String USERNAME = "ebs";
+    private static final String PASSWORD = "oracle";
+
+    public static Connection getConnection() throws SQLException {
+        try {
+            Class.forName("oracle.jdbc.driver.OracleDriver");
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+            throw new SQLException("Oracle JDBC Driver not found", e);
+        }
+        
+        return DriverManager.getConnection(URL, USERNAME, PASSWORD);
+    }
+}
+
+
+
+
+
+
+package com.ebs.dao;
+
+import java.io.PrintStream;
+
+import com.ebs.util.Dbutil;
+
+
+	public class User {
+		
+		public static void insert_user(String first_name,String last_name,String password,String email,String DOB) throws Exception {
+			
+			String sql ="INSERT INTO USERS (FirstNAME,LastNAME, PASSWORD,Email,DOB) VALUES ('"+first_name+"','"+last_name+"', '"+password+"','"+email+"','"+DOB+"',)";
+			
+			Dbutil.executeQuery(sql);
+			
+			System.out.println("tested");
+			((PrintStream) Dbutil.conn).close();
+		}
+
+		public String getFirstName() {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		public String getPassword() {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		public String getEmail() {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		public String getDateOfBirth() {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+	}
+ 
+
+
+
+
+package com.ebs.dao;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+
+public class UserDao {
+    public void addUser(User user) throws SQLException {
+        Connection connection = null;
+        PreparedStatement statement = null;
+
+        try {
+            connection = DatabaseConnection.getConnection();
+            String sql = "INSERT INTO users (id, first_name, last_name, password, email, date_of_birth) VALUES (users_seq.nextval, ?, ?, ?, ?, ?)";
+            statement = connection.prepareStatement(sql);
+            statement.setString(1, user.getFirstName());
+            statement.setString(2, user.getFirstName());
+            statement.setString(3, user.getPassword());
+            statement.setString(4, user.getEmail());
+            statement.setString(5, user.getDateOfBirth());
+            
+            statement.executeUpdate();
+            System.out.println("User inserted successfully.");
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            if (statement != null) {
+                statement.close();
+            }
+            if (connection != null) {
+                connection.close();
+            }
+        }
+    }
+}
+
+
+
+
+
+package com.ebs.gui;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+import java.sql.*;
+
+public class CalculateBill extends JFrame implements ActionListener {
+
+    JTextField tfunits, tfname, tfaddress, tfbill, tfmeter;
+    JButton submit, calculate;
+    Choice cmonth;
+
+    public CalculateBill() {
+        setSize(600, 500);
+        setLocation(400, 150);
+
+        JPanel p = new JPanel();
+        p.setLayout(null);
+        p.setBackground(new Color(0X78DEC7));
+        add(p);
+
+        JLabel heading = new JLabel("Calculate Electricity Bill");
+        heading.setBounds(150, 10, 400, 25);
+        heading.setFont(new Font("MV Boli", Font.BOLD, 25));
+        p.add(heading);
+
+        JLabel lblmeternumber = new JLabel("Meter Number");
+        lblmeternumber.setBounds(100, 80, 100, 20);
+        p.add(lblmeternumber);
+
+        tfmeter = new JTextField();
+        tfmeter.setBounds(240, 80, 200, 20);
+        p.add(tfmeter);
+
+        JLabel lblname = new JLabel("Name");
+        lblname.setBounds(100, 120, 100, 20);
+        p.add(lblname);
+
+        tfname = new JTextField();
+        tfname.setBounds(240, 120, 200, 20);
+        p.add(tfname);
+
+        JLabel lbladdress = new JLabel("Address");
+        lbladdress.setBounds(100, 160, 100, 20);
+        p.add(lbladdress);
+
+        tfaddress = new JTextField();
+        tfaddress.setBounds(240, 160, 200, 20);
+        p.add(tfaddress);
+
+        JLabel lblunits = new JLabel("Units Consumed");
+        lblunits.setBounds(100, 200, 100, 20);
+        p.add(lblunits);
+
+        tfunits = new JTextField();
+        tfunits.setBounds(240, 200, 200, 20);
+        p.add(tfunits);
+
+        JLabel lblmonth = new JLabel("Month");
+        lblmonth.setBounds(100, 240, 100, 20);
+        p.add(lblmonth);
+
+        cmonth = new Choice();
+        cmonth.setBounds(240, 240, 200, 20);
+        cmonth.add("January");
+        cmonth.add("February");
+        cmonth.add("March");
+        cmonth.add("April");
+        cmonth.add("May");
+        cmonth.add("June");
+        cmonth.add("July");
+        cmonth.add("August");
+        cmonth.add("September");
+        cmonth.add("October");
+        cmonth.add("November");
+        cmonth.add("December");
+        p.add(cmonth);
+
+        JLabel lblbill = new JLabel("Your Bill Price");
+        lblbill.setBounds(100, 280, 100, 20);
+        p.add(lblbill);
+
+        tfbill = new JTextField();
+        tfbill.setBounds(240, 280, 200, 20);
+        tfbill.setEditable(false);
+        p.add(tfbill);
+
+        calculate = new JButton("Calculate");
+        calculate.setBounds(100, 350, 100, 25);
+        calculate.setBackground(Color.BLACK);
+        calculate.setForeground(Color.WHITE);
+        calculate.addActionListener(this);
+        p.add(calculate);
+
+        submit = new JButton("Submit");
+        submit.setBounds(340, 350, 100, 25);
+        submit.setBackground(Color.BLACK);
+        submit.setForeground(Color.WHITE);
+        submit.addActionListener(this);
+        p.add(submit);
+
+        setLayout(new BorderLayout());
+        add(p, "Center");
+        getContentPane().setBackground(new Color(0X78DEC7));
+        setVisible(true);
+    }
+
+    public void actionPerformed(ActionEvent ae) {
+        if (ae.getSource() == calculate) {
+            // Calculate bill based on units entered
+            String unitsStr = tfunits.getText();
+            try {
+                int unitsConsumed = Integer.parseInt(unitsStr);
+                double ratePerUnit = 5.0; // Example rate per unit
+                double billAmount = unitsConsumed * ratePerUnit;
+                tfbill.setText(String.format("%.2f", billAmount));
+            } catch (NumberFormatException e) {
+                JOptionPane.showMessageDialog(null, "Please enter valid units");
+            }
+        } else if (ae.getSource() == submit) {
+            // Submit data to database
+            String meter_no = tfmeter.getText();
+            String name = tfname.getText();
+            String address = tfaddress.getText();
+            String unitsStr = tfunits.getText();
+            String month = cmonth.getSelectedItem();
+            String billStr = tfbill.getText();
+
+            try {
+                // Establish database connection
+                Connection conn = DriverManager.getConnection("jdbc:oracle:thin:@localhost:1521:xe", "ebs", "oracle");
+                
+                // Prepare SQL query for insertion
+                String query = "INSERT INTO bill (meter_no, name, address, units, month, amount) VALUES (?, ?, ?, ?, ?, ?)";
+                PreparedStatement pstmt = conn.prepareStatement(query);
+                pstmt.setString(1, meter_no);
+                pstmt.setString(2, name);
+                pstmt.setString(3, address);
+                pstmt.setInt(4, Integer.parseInt(unitsStr));
+                pstmt.setString(5, month);
+                pstmt.setDouble(6, Double.parseDouble(billStr));
+
+                // Execute query
+                pstmt.executeUpdate();
+                
+                // Close resources
+                pstmt.close();
+                conn.close();
+
+                JOptionPane.showMessageDialog(null, "Customer Bill Updated Successfully");
+            } catch (SQLException ex) {
+                JOptionPane.showMessageDialog(null, "Error: " + ex.getMessage());
+            }
+        }
+    }
+
+    public static void main(String[] args) {
+        new CalculateBill();
+    }
+}
+
+
+
+
+
+package com.ebs.gui;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.sql.Statement;
+
+public class Conn {
+    private static final String URL = "jdbc:oracle:thin:@localhost:1521:xe";
+    private static final String USER = "ebs";
+    private static final String PASSWORD = "oracle";
+    public Connection c;
+    public Statement s;
+
+    static {
+        try {
+            Class.forName("oracle.jdbc.driver.OracleDriver");
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+            throw new RuntimeException("Failed to load Oracle JDBC driver");
+        }
+    }
+
+    public Conn() {
+        try {
+            c = DriverManager.getConnection(URL, USER, PASSWORD);
+            s = c.createStatement();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static Connection getConnection() throws SQLException {
+        return DriverManager.getConnection(URL, USER, PASSWORD);
+    }
+}
+
+
+
+
+package com.ebs.gui;
+
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.print.PrinterException;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JOptionPane;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.table.DefaultTableModel;
+
+import com.ebs.util.Dbutil;
+
+public class CustomerDetails extends JFrame implements ActionListener {
+
+    private static final long serialVersionUID = 1L;
+    private JTable table;
+    private JButton print;
+
+    public CustomerDetails() {
+        super("Customer Details");
+
+        setSize(700, 500);
+        setLocation(200, 150);
+
+        table = new JTable();
+        table.setBackground(new Color(0X78DEC7));
+        JScrollPane sp = new JScrollPane(table);
+        add(sp);
+
+        print = new JButton("Print");
+        print.addActionListener(this);
+        print.setBackground(new Color(0X78DEC7));
+        add(print, BorderLayout.SOUTH);
+
+        // Load customer data into the table
+        try {
+            Conn c = new Conn(); // Establish database connection
+            ResultSet rs = c.s.executeQuery("select * from customer");
+            DefaultTableModel model = Dbutil.resultSetToTableModel(rs);
+            table.setModel(model);
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "SQL Error: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
+        }
+
+        setVisible(true);
+    }
+
+    public void actionPerformed(ActionEvent ae) {
+        if (ae.getSource() == print) {
+            try {
+                boolean complete = table.print();
+                if (complete) {
+                    JOptionPane.showMessageDialog(this, "Print successful", "Print", JOptionPane.INFORMATION_MESSAGE);
+                } else {
+                    JOptionPane.showMessageDialog(this, "Print cancelled", "Print", JOptionPane.WARNING_MESSAGE);
+                }
+            } catch (PrinterException pe) {
+                JOptionPane.showMessageDialog(this, "Error printing: " + pe.getMessage(), "Print Error", JOptionPane.ERROR_MESSAGE);
+                pe.printStackTrace();
+            }
+        }
+    }
+
+    public static void main(String[] args) {
+        new CustomerDetails();
+    }
+}
+
+
+
+
+
+package com.ebs.gui;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
+public class Home extends JFrame implements ActionListener {
+
+    String atype, meter;
+    JButton customerDetails, calculateBill, login, signUp;
+
+    Home(String atype, String meter) {
+        this.atype = atype;
+        this.meter = meter;
+        setLayout(null);
+        setBounds(300, 100, 700, 600);
+        setResizable(false);
+
+        // JMenuBar setup
+        JMenuBar mb = new JMenuBar();
+        mb.setBackground(new Color(0XFF5757));
+        setJMenuBar(mb);
+
+        JMenu master = new JMenu(" Home ");
+        master.setFont(new Font("Times new roman", Font.BOLD, 32));
+        master.setForeground(Color.black);
+
+        JMenuItem newcustomer = new JMenuItem("New Customer");
+        newcustomer.setFont(new Font("MV Boli", Font.BOLD, 15));
+        newcustomer.setBackground(Color.WHITE);
+        newcustomer.setBorder(BorderFactory.createLineBorder(Color.BLACK, 2));
+        newcustomer.setPreferredSize(new Dimension(170, 50));
+        newcustomer.addActionListener(this);
+        master.add(newcustomer);
+
+        JMenuItem customerdetails = new JMenuItem("Customer Details");
+        customerdetails.setFont(new Font("MV Boli", Font.BOLD, 15));
+        customerdetails.setBackground(Color.WHITE);
+        customerdetails.setBorder(BorderFactory.createLineBorder(Color.BLACK, 2));
+        customerdetails.setPreferredSize(new Dimension(170, 50));
+        customerdetails.addActionListener(this);
+        master.add(customerdetails);
+
+        JMenuItem calculatebill = new JMenuItem("Calculate Bill");
+        calculatebill.setFont(new Font("MV Boli", Font.BOLD, 15));
+        calculatebill.setBackground(Color.WHITE);
+        calculatebill.setBorder(BorderFactory.createLineBorder(Color.BLACK, 2));
+        calculatebill.setPreferredSize(new Dimension(170, 50));
+        calculatebill.addActionListener(this);
+        master.add(calculatebill);
+
+        JMenu info = new JMenu("Information");
+        info.setFont(new Font("MV Boli", Font.BOLD, 25));
+        info.setForeground(Color.black);
+
+        JMenuItem viewinformation = new JMenuItem("View Information");
+        viewinformation.setFont(new Font("MV Boli", Font.BOLD, 15));
+        viewinformation.setBackground(Color.WHITE);
+        viewinformation.setBorder(BorderFactory.createLineBorder(Color.BLACK, 2));
+        viewinformation.setPreferredSize(new Dimension(170, 50));
+        viewinformation.addActionListener(this);
+        info.add(viewinformation);
+
+        if (atype != null && atype.equals("Admin")) {
+            mb.add(master);
+        } else {
+            mb.add(info);
+        }
+
+        // Buttons setup
+        customerDetails = new JButton("Customer Details");
+        customerDetails.setBounds(250, 200, 200, 50);
+        customerDetails.setBackground(Color.BLACK);
+        customerDetails.setForeground(Color.WHITE);
+        customerDetails.setFont(new Font("MV Boli", Font.BOLD, 20));
+        customerDetails.addActionListener(this);
+        add(customerDetails);
+
+        calculateBill = new JButton("Calculate Bill");
+        calculateBill.setBounds(250, 300, 200, 50);
+        calculateBill.setBackground(Color.BLACK);
+        calculateBill.setForeground(Color.WHITE);
+        calculateBill.setFont(new Font("MV Boli", Font.BOLD, 20));
+        calculateBill.addActionListener(this);
+        add(calculateBill);
+
+        login = new JButton("Login");
+        login.setBounds(100, 450, 200, 50); // Bottom left
+        login.setBackground(Color.BLACK);
+        login.setForeground(Color.WHITE);
+        login.setFont(new Font("MV Boli", Font.BOLD, 20));
+        login.addActionListener(this);
+        add(login);
+
+        signUp = new JButton("Sign Up");
+        signUp.setBounds(400, 450, 200, 50); // Bottom right
+        signUp.setBackground(Color.BLACK);
+        signUp.setForeground(Color.WHITE);
+        signUp.setFont(new Font("MV Boli", Font.BOLD, 20));
+        signUp.addActionListener(this);
+        add(signUp);
+
+        getContentPane().setBackground(new Color(0x78DEC7));
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setVisible(true);
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent ae) {
+        if (ae.getSource() == customerDetails) {
+            CustomerDetails detailsFrame = new CustomerDetails();
+            detailsFrame.setVisible(true);
+        } else if (ae.getSource() == calculateBill) {
+            CalculateBill billFrame = new CalculateBill();
+            billFrame.setVisible(true);
+        } else if (ae.getSource() == login) {
+            new Login();
+        } else if (ae.getSource() == signUp) {
+            new Signup();
+        } else {
+            String msg = ae.getActionCommand();
+            if (msg.equals("New Customer")) {
+                NewCustomer newCustomerFrame = new NewCustomer();
+                newCustomerFrame.setVisible(true);
+            } else if (msg.equals("View Information")) {
+                ViewInformation infoFrame = new ViewInformation(meter);
+                infoFrame.setVisible(true);
+            }
+        }
+    }
+
+    public static void main(String[] args) {
+        new Home("Admin", "someMeterValue");
+    }
+}
+
+
+
+
+
+
+package com.ebs.gui;
+
+
+
+
+
+package com.ebs.gui;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+import java.sql.*;
+
+public class Login extends JFrame implements ActionListener {
+
+    JButton login, cancel, signup;
+    JTextField username, password;
+    Choice logginin;
+
+    Login() {
+        super("Login Page");
+        getContentPane().setBackground(new Color(0X78DEC7));
+        setLayout(null);
+
+        JLabel lblusername = new JLabel("Username");
+        lblusername.setBounds(350, 80, 100, 20);
+        lblusername.setFont(new Font("MV Boli", Font.BOLD, 14));
+        add(lblusername);
+
+        username = new JTextField();
+        username.setBounds(450, 80, 150, 20);
+        add(username);
+
+        JLabel lblpassword = new JLabel("Password");
+        lblpassword.setFont(new Font("MV Boli", Font.BOLD, 14));
+        lblpassword.setBounds(350, 120, 100, 20);
+        add(lblpassword);
+
+        password = new JTextField();
+        password.setBounds(450, 120, 150, 20);
+        add(password);
+
+        JLabel loggininas = new JLabel("Logging in as");
+        loggininas.setFont(new Font("MV Boli", Font.BOLD, 14));
+        loggininas.setBounds(350, 160, 100, 20);
+        add(loggininas);
+
+        logginin = new Choice();
+        logginin.add("Admin");
+        logginin.add("Customer");
+        logginin.setBounds(450, 160, 150, 20);
+        add(logginin);
+
+        login = new JButton("Login");
+        login.setBounds(350, 200, 100, 40);
+        login.setBackground(Color.orange);
+        login.addActionListener(this);
+        add(login);
+
+        cancel = new JButton("Cancel");
+        cancel.setBounds(470, 200, 100, 40);
+        cancel.setBackground(Color.orange);
+        cancel.addActionListener(this);
+        add(cancel);
+
+        signup = new JButton("Signup");
+        signup.setBounds(590, 200, 100, 40);
+        signup.setBackground(Color.orange);
+        signup.addActionListener(this);
+        add(signup);
+
+        setSize(840, 400);
+        setLocationRelativeTo(null); // Center the frame on the screen
+        setVisible(true);
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent ae) {
+        if (ae.getSource() == login) {
+            String susername = username.getText();
+            String spassword = password.getText();
+            String user = logginin.getSelectedItem();
+
+            try {
+                Conn c = new Conn();
+                String query = "select * from LOGIN where USERNAME = '" + susername + "' and PASSWORD = '" + spassword + "' and USER_INFO = '" + user + "'";
+
+                ResultSet rs = c.s.executeQuery(query);
+
+                if (rs.next()) {
+                    String meter = rs.getString("METER_NO");
+                    setVisible(false);
+                    new Home(user, meter);
+                } else {
+                    JOptionPane.showMessageDialog(null, "Invalid Login");
+                    username.setText("");
+                    password.setText("");
+                }
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        } else if (ae.getSource() == cancel) {
+            setVisible(false);
+        } else if (ae.getSource() == signup) {
+            setVisible(false);
+            new Signup();
+        }
+    }
+
+    public static void main(String[] args) {
+        new Login();
+    }
+}
+
+
+
+
+package com.ebs.gui;
+
+import javax.swing.*;
+import java.awt.*;
+
+public class MainScreen {
+        
+    JFrame frame;
+    JLabel text=new JLabel("Electricity Management System");
+    JProgressBar progressBar=new JProgressBar();
+    JLabel message=new JLabel();
+    
+    MainScreen() {
+        createGUI();
+        addText();
+        addProgressBar();
+        runningPBar();
+    }
+    
+    public void createGUI(){
+        frame=new JFrame();
+        frame.getContentPane().setLayout(null); 
+        frame.setUndecorated(true);
+        frame.setSize(600,600); 
+        frame.setLocationRelativeTo(null);
+        frame.getContentPane().setBackground(new Color(0X78DEC7)); 
+        frame.setVisible(true);
+    }
+
+    public void addText()
+    {
+        text.setFont(new Font("MV Boli",Font.BOLD,22));
+        text.setBounds(120,300,400,50);
+        text.setForeground(Color.black);
+        frame.add(text);
+    }
+    
+    public void addProgressBar(){
+        progressBar.setBounds(100,380,400,30); 
+        progressBar.setBorderPainted(true);
+        progressBar.setStringPainted(true);
+        progressBar.setBackground(Color.black);
+        progressBar.setForeground(new Color(0XFF6464));
+        progressBar.setValue(0);
+        frame.add(progressBar);
+    }
+    
+    public void runningPBar(){
+        int i=0;
+        while( i<=100)
+        {
+            try{
+                Thread.sleep(40);   
+                progressBar.setValue(i);    
+                i++;
+                if(i==100) {
+                    frame.dispose(); // Close the progress screen after completion
+                    openHomePage(); // Open home page after progress bar completes
+                }
+            }catch(Exception e){
+                e.printStackTrace();
+            }
+        }
+    }
+    
+    public void openHomePage() {
+        SwingUtilities.invokeLater(new Runnable() {
+            public void run() {
+                new Home("Admin", "someMeterValue"); // Open Home page
+            }
+        });
+    }
+   
+    public static void main(String[] args) {
+        new MainScreen();
+    }
+}
+
+
+
+
+
+
+
+package com.ebs.gui;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+import java.sql.*;
+
+public class NewCustomer extends JFrame implements ActionListener {
+
+    JTextField tfcustomerid, tfname, tfaddress, tfcontact;
+    JButton submit;
+
+    NewCustomer() {
+        setTitle("New Customer");
+        setSize(700, 500);
+        setLocation(400, 100);
+
+        JPanel p = new JPanel();
+        p.setLayout(null);
+        p.setBackground(new Color(0x78DEC7));
+        add(p);
+
+        JLabel heading = new JLabel("New Customer");
+        heading.setBounds(180, 10, 200, 25);
+        heading.setFont(new Font("Tahoma", Font.PLAIN, 24));
+        p.add(heading);
+
+        JLabel lblcustomerid = new JLabel("Customer ID");
+        lblcustomerid.setBounds(100, 40, 150, 20);
+        p.add(lblcustomerid);
+
+        tfcustomerid = new JTextField();
+        tfcustomerid.setBounds(240, 40, 200, 20);
+        p.add(tfcustomerid);
+
+        JLabel lblname = new JLabel("Customer Name");
+        lblname.setBounds(100, 80, 150, 20);
+        p.add(lblname);
+
+        tfname = new JTextField();
+        tfname.setBounds(240, 80, 200, 20);
+        p.add(tfname);
+
+        JLabel lbladdress = new JLabel("Address");
+        lbladdress.setBounds(100, 120, 100, 20);
+        p.add(lbladdress);
+
+        tfaddress = new JTextField();
+        tfaddress.setBounds(240, 120, 200, 20);
+        p.add(tfaddress);
+
+        JLabel lblcontact = new JLabel("Contact Information");
+        lblcontact.setBounds(100, 160, 150, 20);
+        p.add(lblcontact);
+
+        tfcontact = new JTextField();
+        tfcontact.setBounds(240, 160, 200, 20);
+        p.add(tfcontact);
+
+        submit = new JButton("Submit");
+        submit.setBounds(250, 220, 100, 25);
+        submit.setBackground(Color.BLACK);
+        submit.setForeground(Color.WHITE);
+        submit.addActionListener(this);
+        p.add(submit);
+
+        setLayout(new BorderLayout());
+        add(p, BorderLayout.CENTER);
+
+        getContentPane().setBackground(new Color(0x78DEC7));
+
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setVisible(true);
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent ae) {
+        if (ae.getSource() == submit) {
+            String customerIdStr = tfcustomerid.getText();
+            String name = tfname.getText();
+            String address = tfaddress.getText();
+            String contact = tfcontact.getText();
+
+            try {
+                int customerId = Integer.parseInt(customerIdStr);
+                
+                Conn c = new Conn();
+                String query = "INSERT INTO Customer (CustomerID, Name, Address, ContactInformation) VALUES (?, ?, ?, ?)";
+                PreparedStatement ps = c.c.prepareStatement(query);
+                ps.setInt(1, customerId);
+                ps.setString(2, name);
+                ps.setString(3, address);
+                ps.setString(4, contact);
+                ps.executeUpdate();
+
+                JOptionPane.showMessageDialog(null, "Customer added successfully");
+                setVisible(false);
+            } catch (NumberFormatException e) {
+                JOptionPane.showMessageDialog(null, "Invalid Customer ID");
+            } catch (SQLException e) {
+                e.printStackTrace();
+                JOptionPane.showMessageDialog(null, "Error adding customer: " + e.getMessage());
+            }
+        }
+    }
+
+    public static void main(String[] args) {
+        new NewCustomer();
+    }
+}
+
+
+
+
+package com.ebs.gui;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+import java.sql.*;
+
+public class Signup extends JFrame implements ActionListener {
+
+    JButton create;
+    Choice accountType;
+    JTextField meter, username, name, password;
+
+    Signup() {
+        setBounds(450, 150, 700, 400);
+        getContentPane().setBackground(new Color(0X78DEC7));
+        setLayout(null);
+
+        JPanel panel = new JPanel();
+        panel.setBounds(30, 30, 650, 300);
+        panel.setBackground(new Color(0X78DEC7));
+        panel.setLayout(null);
+        add(panel);
+
+        JLabel heading = new JLabel("Create Account As");
+        heading.setBounds(100, 50, 140, 20);
+        heading.setForeground(Color.black);
+        heading.setFont(new Font("MV Boli", Font.BOLD, 14));
+        panel.add(heading);
+
+        accountType = new Choice();
+        accountType.add("Admin");
+        accountType.add("Customer");
+        accountType.setBounds(260, 50, 150, 20);
+        panel.add(accountType);
+
+        JLabel lblmeter = new JLabel("Meter Number");
+        lblmeter.setBounds(100, 90, 140, 20);
+        lblmeter.setForeground(Color.black);
+        lblmeter.setFont(new Font("MV Boli", Font.BOLD, 14));
+        lblmeter.setVisible(false);
+        panel.add(lblmeter);
+
+        meter = new JTextField();
+        meter.setBounds(260, 90, 150, 20);
+        meter.setVisible(false);
+        panel.add(meter);
+
+        JLabel lblusername = new JLabel("Username");
+        lblusername.setBounds(100, 130, 140, 20);
+        lblusername.setForeground(Color.black);
+        lblusername.setFont(new Font("MV Boli", Font.BOLD, 14));
+        panel.add(lblusername);
+
+        username = new JTextField();
+        username.setBounds(260, 130, 150, 20);
+        panel.add(username);
+
+        JLabel lblname = new JLabel("Name");
+        lblname.setBounds(100, 170, 140, 20);
+        lblname.setForeground(Color.black);
+        lblname.setFont(new Font("MV Boli", Font.BOLD, 14));
+        panel.add(lblname);
+
+        name = new JTextField();
+        name.setBounds(260, 170, 150, 20);
+        panel.add(name);
+
+        meter.addFocusListener(new FocusListener() {
+
+            public void focusGained(FocusEvent fe) {
+            }
+
+            public void focusLost(FocusEvent fe) {
+                try {
+                    Conn c = new Conn();
+                    ResultSet rs = c.s.executeQuery("select * from login where meter_no = '" + meter.getText() + "'");
+                    while (rs.next()) {
+                        name.setText(rs.getString("name"));
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+
+        JLabel lblpassword = new JLabel("Password");
+        lblpassword.setBounds(100, 210, 140, 20);
+        lblpassword.setForeground(Color.black);
+        lblpassword.setFont(new Font("MV Boli", Font.BOLD, 14));
+        panel.add(lblpassword);
+
+        password = new JTextField();
+        password.setBounds(260, 210, 150, 20);
+        panel.add(password);
+
+        accountType.addItemListener(new ItemListener() {
+            public void itemStateChanged(ItemEvent ae) {
+                String user = accountType.getSelectedItem();
+                if (user.equals("Customer")) {
+                    lblmeter.setVisible(true);
+                    meter.setVisible(true);
+                    name.setEditable(false);
+                } else {
+                    lblmeter.setVisible(false);
+                    meter.setVisible(false);
+                    name.setEditable(true);
+                }
+            }
+        });
+
+        create = new JButton("Create");
+        create.setBackground(Color.black);
+        create.setForeground(Color.white);
+        create.setBounds(260, 260, 120, 25);
+        create.addActionListener(this);
+        panel.add(create);
+
+        setVisible(true);
+    }
+
+    public void actionPerformed(ActionEvent ae) {
+        if (ae.getSource() == create) {
+            String atype = accountType.getSelectedItem();
+            String susername = username.getText();
+            String sname = name.getText();
+            String spassword = password.getText();
+            String smeter = meter.getText();
+
+            try {
+                Conn c = new Conn();
+
+                String query;
+                if (atype.equals("Admin")) {
+                    query = "insert into login values('" + smeter + "', '" + susername + "', '" + sname + "', '" + spassword + "', '" + atype + "')";
+                } else {
+                    query = "update login set username = '" + susername + "', password = '" + spassword + "', user = '" + atype + "' where meter_no = '" + smeter + "'";
+                }
+
+                c.s.executeUpdate(query);
+
+                JOptionPane.showMessageDialog(null, "Account Created Successfully");
+                setVisible(false);
+                new Login();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public static void main(String[] args) {
+        new Signup();
+    }
+}
+
+
+
+
+
+package com.ebs.gui;
+
+import javax.swing.*;
+import java.awt.*;
+import java.sql.*;
+
+public class ViewInformation extends JFrame{
+
+    ViewInformation(String meter) {
+        setBounds(350, 150, 500, 300);
+        getContentPane().setBackground(new Color(0X78DEC7));
+        setLayout(null);
+        
+        
+        JLabel heading = new JLabel("CUSTOMER INFORMATION");
+        heading.setBounds(150, 20, 500, 40);
+        heading.setFont(new Font("MV Boli", Font.BOLD, 15));
+        add(heading);
+        
+        JLabel lblname = new JLabel("Name:");
+        lblname.setFont(new Font("MV Boli", Font.BOLD, 15));
+        lblname.setBounds(100, 60, 100, 40);
+        add(lblname);
+        
+        JLabel name = new JLabel("");
+        name.setFont(new Font("MV Boli", Font.BOLD, 15));
+        name.setBounds(250, 60, 100, 40);
+        add(name);
+        
+        JLabel lblmeternumber = new JLabel("Meter No:");
+        lblmeternumber.setFont(new Font("MV Boli", Font.BOLD, 15));
+        lblmeternumber.setBounds(70, 130, 100, 40);
+        add(lblmeternumber);
+        
+        JLabel meternumber = new JLabel("");
+        meternumber.setFont(new Font("MV Boli", Font.BOLD, 20));
+        meternumber.setBounds(250, 130, 100, 40);
+        add(meternumber);
+ 
+        try {
+            Conn c = new Conn();
+            ResultSet rs = c.s.executeQuery("select * from customer where meter_no = '"+meter+"'");
+            while(rs.next()) {
+                name.setText(rs.getString("name"));
+
+                meternumber.setText(rs.getString("meter_no"));
+            }
+        } catch (Exception e) {
+        }
+  
+        setVisible(true);
+    }
+   
+    public static void main(String[] args) {
+        new ViewInformation("");
+    }
+}
+
+
+
+
+
+package com.ebs.util;
+
+import javax.swing.table.DefaultTableModel;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
+
+public class Dbutil {
+    public static DefaultTableModel resultSetToTableModel(ResultSet rs) throws SQLException {
+        ResultSetMetaData metaData = rs.getMetaData();
+        int columnCount = metaData.getColumnCount();
+
+        // Create columns
+        String[] columnNames = new String[columnCount];
+        for (int i = 0; i < columnCount; i++) {
+            columnNames[i] = metaData.getColumnName(i + 1);
+        }
+
+        // Create data
+        Object[][] data = new Object[0][columnCount];
+        while (rs.next()) {
+            Object[] row = new Object[columnCount];
+            for (int i = 0; i < columnCount; i++) {
+                row[i] = rs.getObject(i + 1);
+            }
+
+            // Append row to data array
+            data = appendRow(data, row);
+        }
+
+        return new DefaultTableModel(data, columnNames);
+    }
+
+    private static Object[][] appendRow(Object[][] data, Object[] row) {
+        Object[][] newData = new Object[data.length + 1][row.length];
+        for (int i = 0; i < data.length; i++) {
+            newData[i] = data[i];
+        }
+        newData[data.length] = row;
+        return newData;
+    }
+}
